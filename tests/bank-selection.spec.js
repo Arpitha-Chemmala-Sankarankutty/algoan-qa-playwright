@@ -1,18 +1,34 @@
 const { test, expect } = require('@playwright/test');
 
-test('User can see and select Algoan Bank', async ({ page }) => {
-  await page.goto(
-    'https://connect.algoan.com/v2/init?client_id=030d0c7dfcfdcfcc135c6cf5&redirect_uri=https://dashboard.algoan.com'
-  );
+const url =
+  'https://connect.algoan.com/v2/init?client_id=030d0c7dfcfdcfcc135c6cf5&redirect_uri=https://dashboard.algoan.com';
 
-  await page.getByRole('checkbox').check();
-  await page.getByRole('button', { name: /continuer/i }).click();
+test('User can authorize and select Algoan Bank', async ({ page }) => {
 
-  // Wait explicitly for Algoan Bank to appear
-  const algoanBank = page.locator('text=Algoan Bank');
+  // STEP 1 — open page
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-  await expect(algoanBank).toBeVisible({ timeout: 15000 });
+  // STEP 2 — wait checkbox (REAL signal page ready)
+  const checkbox = page.locator('input[type="checkbox"]');
+  await expect(checkbox).toBeVisible({ timeout: 30000 });
 
-  // Select Algoan Bank
-  await algoanBank.click();
+  // STEP 3 — authorize
+  await checkbox.click();
+
+  // STEP 4 — continue
+  await page.getByRole('button').click();
+
+  // STEP 5 — wait bank search box appears
+  const searchBox = page.getByRole('textbox');
+  await expect(searchBox).toBeVisible({ timeout: 30000 });
+
+  // STEP 6 — search bank
+  await searchBox.fill('Algoan');
+
+  // STEP 7 — select bank
+  await page.getByText('Algoan Bank').first().click();
+
+  // STEP 8 — QR authentication page
+  await expect(page.locator('canvas')).toBeVisible({ timeout: 30000 });
+
 });
